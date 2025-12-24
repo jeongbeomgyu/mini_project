@@ -2,10 +2,7 @@ package org.example.onebyte.service;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.example.onebyte.dto.user.LoginRequest;
-import org.example.onebyte.dto.user.RegisterRequest;
-import org.example.onebyte.dto.user.TokenResponse;
-import org.example.onebyte.dto.user.UserResponse;
+import org.example.onebyte.dto.user.*;
 import org.example.onebyte.entity.RefreshToken;
 import org.example.onebyte.entity.User;
 import org.example.onebyte.exception.AuthenticationFailedException;
@@ -15,6 +12,7 @@ import org.example.onebyte.repository.UserRepository;
 import org.example.onebyte.security.JwtTokenizer;
 import org.example.onebyte.util.CookieUtil;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +30,13 @@ public class UserServiceImpl implements UserService {
     private final CookieUtil cookieUtil;
     private final JwtTokenizer jwtTokenizer;
 
+    //추후 변경가능
+    private long refreshMaxAgeSeconds = 24 * 60 * 60L;
+
+    // 회원가입
     @Override
-    public TokenResponse register(RegisterRequest request, HttpServletResponse response) {
+    public MessageResponse register(RegisterRequest request) {
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw DuplicateResourceException.userEmail(request.getEmail());
         }
@@ -49,32 +52,15 @@ public class UserServiceImpl implements UserService {
                 request.getEmail(),
                 passwordHash
         );
-        User saved = userRepository.save(user);
 
-        //토큰 생성 (추후 JwtUtil 메서드명에 맞춰 수정)
-        String accessToken = jwtTokenizer.createAccessToken(saved);
-        String refreshToken = jwtTokenizer.createRefreshToken(saved);
+        userRepository.save(user);
 
-        //refreshToken DB 저장(유저당 1개 정책)
-        refreshTokenRepository.deleteByUser_Id(saved.getId());
-
-        RefreshToken rt = RefreshToken.builder()
-                .user(saved)
-                .token(refreshToken)
-                .expiresAt(LocalDateTime.now().plusDays(7)) // 예: 7일 (너희 정책대로)
-                .build();
-
-        //refreshToken DB저장
-        refreshTokenRepository.save(rt);
-
-        // 클라이언트가 refreshtoken를 쿠키로 가지고 있도록
-        // 작성요망
-
-        // accessToken은 바디로
-        return new TokenResponse(accessToken);
+        return new MessageResponse("회원가입 완료");
     }
 
-    // 로그인(토큰 발급 + refresh 쿠키 세팅)
+
+
+    // 로그인
     @Override
     public TokenResponse login(LoginRequest request, HttpServletResponse response) {
 
@@ -91,34 +77,55 @@ public class UserServiceImpl implements UserService {
             throw new AuthenticationFailedException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
 
-        String accessToken = jwtTokenizer.createAccessToken(user);
-        String refreshToken = jwtTokenizer.createRefreshToken(user);
+        // 토큰 생성
+        String accessToken = jwtTokenizer.createAccessToken(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getNickname(),
+                user.getRole()
+        );
 
-        // refreshToken DB 저장(유저당 1개 정책)
+        String refreshToken = jwtTokenizer.createRefreshToken(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getNickname(),
+                user.getRole()
+        );
+
         refreshTokenRepository.deleteByUser_Id(user.getId());
+        // 충돌 방지
+        refreshTokenRepository.flush();
 
-        // 범규님 내용 합하면서 수정 예정
+        //추후 DB에서 직접 createdAt 생성될때 거기서 자동 할당 되는 방법 없는지 고려
         RefreshToken rt = RefreshToken.builder()
                 .user(user)
                 .token(refreshToken)
-                .expiresAt(LocalDateTime.now().plusDays(7)) // 7일
+                .expiresAt(LocalDateTime.now().plusSeconds(refreshMaxAgeSeconds))
                 .build();
 
         refreshTokenRepository.save(rt);
 
-        // 추후 수정 예정
-        // 쿠키 추가 부분
+        // refreshToken 쿠키 세팅 (CookieUtil 사용)
+        // **** 로그인 응답에 Set-Cookie  보냄
+        cookieUtil.addRefreshTokenCookie(response, refreshToken, refreshMaxAgeSeconds);
 
+        // 바디에는 accessToken만 내려줌
         return new TokenResponse(accessToken);
     }
 
+
     // 로그아웃(DB refresh 삭제 + 쿠키 만료)
     @Override
-    public void logout(String refreshToken, HttpServletResponse response){
+    public ResponseEntity<MessageResponse> logout(String refreshToken, HttpServletResponse response){
+
         if (refreshToken != null && !refreshToken.isBlank()) {
             refreshTokenRepository.deleteByToken(refreshToken);
         }
-        expireRefreshCookie(response);
+        cookieUtil.addRefreshTokenCookie(response,refreshToken,refreshMaxAgeSeconds);
+
+        return ResponseEntity.ok(new MessageResponse("로그아웃 완료"));
     }
 
     // 토큰 재발급(accessToken만 새로 발급)
@@ -129,7 +136,7 @@ public class UserServiceImpl implements UserService {
             throw new AuthenticationFailedException("로그인이 필요합니다.");
         }
 //        2.DB에서 refreshToken 레코드 조회
-        RefreshToken rt = refreshTokenRepository.findByToken(refreshToken).orElseThrow(()->new AuthenticationFailedException("로그인이 필요합니다."))
+        RefreshToken rt = refreshTokenRepository.findByToken(refreshToken).orElseThrow(()->new AuthenticationFailedException("로그인이 필요합니다."));
 
 //        3.만료됐는지 체크
         if(rt.isExpired()){
@@ -139,24 +146,15 @@ public class UserServiceImpl implements UserService {
 //        4.연결된 유저
         User user = rt.getUser();
 //        5.새 accessToken 발급해서 TokenResponse로 반환
-        String newAccessToken = jwtTokenizer.createAccessToken(user);
+        String newAccessToken = jwtTokenizer.createAccessToken(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getNickname(),
+                user.getRole()
+        );
 
         return new TokenResponse(newAccessToken);
-    }
-
-
-    // refresh 쿠키만 만료
-    @Override
-    public void expireRefreshCookie(HttpServletResponse response){
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .path("/")
-                .maxAge(0) //쿠키 삭제
-                .sameSite("Lax")
-                // .secure(true) // HTTPS 배포환경에서 켜기
-                .build();
-
-        response.addHeader("Set-Cookie", cookie.toString());
     }
 
 }

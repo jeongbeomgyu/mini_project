@@ -18,17 +18,18 @@ public class UserController {
 
     // 회원가입
     @PostMapping("/register")
-    public ResponseEntity<TokenResponse> createUser(@Valid @RequestBody RegisterRequest request, HttpServletResponse response) {
-        TokenResponse tokenResponse = userService.register(request,response);
-        return ResponseEntity.status(HttpStatus.CREATED).body(tokenResponse);
+    public ResponseEntity<MessageResponse> createUser(@Valid @RequestBody RegisterRequest request) {
+        userService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("회원가입을 축하드립니다."));
     }
 
     // 로그인
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> loginUser(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
-        TokenResponse tokenResponse = userService.login(request,response);
+        TokenResponse tokenResponse = userService.login(request, response);
         return ResponseEntity.ok(tokenResponse);
     }
+
 
     // 로그아웃
     @PostMapping("/logout")

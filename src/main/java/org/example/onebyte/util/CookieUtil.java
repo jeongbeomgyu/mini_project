@@ -9,7 +9,7 @@ import java.time.Duration;
 @Component
 public class CookieUtil {
 
-    // refreshToken 쿠키 심기
+    // 브라우저에 refreshToken 쿠키 심기
     public void addRefreshTokenCookie(HttpServletResponse response, String refreshToken, long maxAgeSeconds) {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)          // JS로 못 읽게(보안)
@@ -18,7 +18,8 @@ public class CookieUtil {
                 .sameSite("Lax")         // 로컬 개발에서 무난
                 // .secure(true)         // HTTPS 환경에서만 켜기
                 .build();
-
+        
+        // 헤드에 set-cookie 추가
         response.addHeader("Set-Cookie", cookie.toString());
     }
 

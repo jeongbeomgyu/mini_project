@@ -37,10 +37,10 @@ public class User {
     private Boolean isActive;
 
     //CREATED_AT, UPDATE_AT 자동 업데이트
-    @Column(name = "create_at", insertable = false, updatable = false)
+    @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "update_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
     //회원가입용 생성 메서드

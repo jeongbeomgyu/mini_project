@@ -127,12 +127,26 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
+
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthFailed(
+            AuthenticationFailedException e,
+            HttpServletRequest request
+    ) {
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .message(e.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
 // 추후 추가 예정
 //    @ExceptionHandler(AccessDeniedException.class)
 //    public ResponseEntity<ErrorResponse> handleAccess(){}
 //
-//    @ExceptionHandler(AuthenticationFailedException.class)
-//    public ResponseEntity<ErrorResponse> handleAuthentication(){}
 //
 //    @ExceptionHandler(GlobalExceptionHandler.class)
 //    public ResponseEntity<ErrorResponse> handleGlobal(){}

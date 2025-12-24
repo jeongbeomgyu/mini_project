@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class UserResponse {
 
     private Long id;
+    private String name;
     private String nickname;
     private String email;
     private Role role;
@@ -21,6 +22,7 @@ public class UserResponse {
     public static UserResponse from(User user) {
         return UserResponse.builder()
                 .id(user.getId())
+                .name(user.getName())
                 .nickname(user.getNickname())
                 .email(user.getEmail())
                 .role(user.getRole())

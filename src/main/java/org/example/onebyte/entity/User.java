@@ -15,36 +15,39 @@ import java.time.LocalDateTime;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID")
     private Long id;
 
-    @Column(name = "NICKNAME", nullable = false, unique = true, length = 30)
+    @Column(nullable = false, length = 30)
+    private String name;
+
+    @Column(nullable = false, unique = true, length = 30)
     private String nickname;
 
-    @Column(name = "EMAIL", nullable = false, unique = true, length = 100)
+    @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(name = "PASSWORD_HASH", nullable = false, length = 255)
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "ROLE", nullable = false, length = 20)
+    @Column(name = "role", nullable = false, length = 20)
     private Role role;
 
-    @Column(name = "IS_ACTIVE", nullable = false)
+    @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
     //CREATED_AT, UPDATE_AT 자동 업데이트
-    @Column(name = "CREATED_AT", insertable = false, updatable = false)
+    @Column(name = "create_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "UPDATED_AT", insertable = false, updatable = false)
+    @Column(name = "update_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
     //회원가입용 생성 메서드
-    public static User createForRegister(String  nickname, String email, String passwordHash) {
+    public static User createForRegister(String name, String  nickname, String email, String passwordHash) {
         return new User(
                 null,
+                name,
                 nickname,
                 email,
                 passwordHash,
@@ -56,6 +59,10 @@ public class User {
     }
 
     //도메인 메서드
+    public void changeName(String name) {
+        this.name = name;
+    }
+
     public void changeNickname(String nickname) {
         this.nickname = nickname;
     }

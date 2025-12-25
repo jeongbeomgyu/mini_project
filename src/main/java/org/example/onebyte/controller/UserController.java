@@ -37,11 +37,14 @@ public class UserController {
         userService.logout(refreshToken,response);
         return ResponseEntity.ok(new MessageResponse("로그아웃 완료"));
     }
-//
-//    //토큰재발급
-//    @PostMapping("/reissue")
-//    public ResponseEntity<UserResponse> reissueUser(){
-//        return null;
-//    }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<TokenResponse> reissue(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken
+    ) {
+        TokenResponse tokenResponse = userService.reissue(refreshToken);
+        return ResponseEntity.ok(tokenResponse);
+    }
+
 
 }

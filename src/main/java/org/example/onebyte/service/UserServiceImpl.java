@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+//표준 클래임
+import io.jsonwebtoken.Claims;
 
 import java.time.LocalDateTime;
 
@@ -128,24 +130,34 @@ public class UserServiceImpl implements UserService {
         return ResponseEntity.ok(new MessageResponse("로그아웃 완료"));
     }
 
-    // 토큰 재발급(accessToken만 새로 발급)
     @Override
-    public TokenResponse reissue(String refreshToken){
-//        1.refreshToken 값이 있는지 체크
-        if(refreshToken != null && !refreshToken.isBlank()){
-            throw new AuthenticationFailedException("로그인이 필요합니다.");
-        }
-//        2.DB에서 refreshToken 레코드 조회
-        RefreshToken rt = refreshTokenRepository.findByToken(refreshToken).orElseThrow(()->new AuthenticationFailedException("로그인이 필요합니다."));
+    public TokenResponse reissue(String refreshToken) {
 
-//        3.만료됐는지 체크
-        if(rt.isExpired()){
-            refreshTokenRepository.deleteByToken(refreshToken);
-            throw new AuthenticationFailedException("로그인이 필요합니다.");
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new AuthenticationFailedException("refreshToken이 없습니다.");
         }
-//        4.연결된 유저
-        User user = rt.getUser();
-//        5.새 accessToken 발급해서 TokenResponse로 반환
+
+        Claims claims = jwtTokenizer.parseRefreshToken(refreshToken); // 만료면 예외
+        Long userId = claims.get("userId", Long.class);
+
+        RefreshToken saved = refreshTokenRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new AuthenticationFailedException("유효하지 않은 refreshToken 입니다."));
+
+        // 저장된 DB 토큰 값과 유저 토큰 일치 확인
+        if (!saved.getToken().equals(refreshToken)) {
+            throw new AuthenticationFailedException("유효하지 않은 refreshToken 입니다.");
+        }
+
+        //DB 만료 확인
+        if (saved.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new AuthenticationFailedException("만료된 refreshToken 입니다.");
+        }
+
+        //유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationFailedException("유저를 찾을 수 없습니다."));
+
+        //새 accessToken 발급
         String newAccessToken = jwtTokenizer.createAccessToken(
                 user.getId(),
                 user.getEmail(),
@@ -156,5 +168,6 @@ public class UserServiceImpl implements UserService {
 
         return new TokenResponse(newAccessToken);
     }
+
 
 }

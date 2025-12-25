@@ -71,4 +71,7 @@ public class User {
     public void deactivate() { // 회원 비활성화(삭제 대신)
         this.isActive = false;
     }
+
+    //탈퇴회원 재가입을 위해
+    public void activate() { this.isActive = true; }
 }

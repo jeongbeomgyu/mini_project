@@ -13,4 +13,7 @@ public interface MyPageService {
 
     //비밀번호 변경
     void updatePassword(Long userId, UpdatePasswordRequest request);
+
+    //회원탈퇴
+    void withdraw(Long userId);
 }

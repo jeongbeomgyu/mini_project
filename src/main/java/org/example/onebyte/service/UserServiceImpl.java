@@ -35,29 +35,53 @@ public class UserServiceImpl implements UserService {
     //추후 변경가능
     private long refreshMaxAgeSeconds = 24 * 60 * 60L;
 
+    // isActive=false 탈퇴로 인한 이슈 발생
     // 회원가입
     @Override
     public MessageResponse register(RegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        User existing = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+        // 이미 이메일이 있는데 활성 유저면 -> 중복 에러
+        if (existing != null && Boolean.TRUE.equals(existing.getIsActive())) {
             throw DuplicateResourceException.userEmail(request.getEmail());
         }
-        if (userRepository.existsByNickname(request.getNickname())) {
-            throw DuplicateResourceException.userNickname(request.getNickname());
+
+        // 닉네임 중복 체크
+        // 신규가입이면 그냥 체크
+        // 복구가입 : 기존 본인 닉네임이면 통과, 다른 사람 닉네임이면 중복 에러
+        boolean nicknameExists = userRepository.existsByNickname(request.getNickname());
+        if (nicknameExists) {
+            if (existing == null) {
+                throw DuplicateResourceException.userNickname(request.getNickname());
+            }
+            // existing이 있는데, 기존 닉네임이랑 다르면 -> 누군가가 이미 쓰는 닉네임
+            if (!request.getNickname().equals(existing.getNickname())) {
+                throw DuplicateResourceException.userNickname(request.getNickname());
+            }
         }
 
         String passwordHash = passwordEncoder.encode(request.getPassword());
 
-        User user = User.createForRegister(
-                request.getName(),
-                request.getNickname(),
-                request.getEmail(),
-                passwordHash
-        );
+        //신규가입
+        if (existing == null) {
+            User user = User.createForRegister(
+                    request.getName(),
+                    request.getNickname(),
+                    request.getEmail(),
+                    passwordHash
+            );
+            userRepository.save(user);
+            return new MessageResponse("회원가입을 완료합니다.");
+        }
 
-        userRepository.save(user);
+        //탈퇴 유저 복구
+        existing.activate(); // isActive = true
+        existing.changeInfo(request.getName().trim(), request.getNickname().trim());
+        existing.changePasswordHash(passwordHash);
 
-        return new MessageResponse("회원가입 완료");
+        // JPA 더티체킹으로 저장됨
+        return new MessageResponse("회원가입을 완료합니다.");
     }
 
     // 로그인
@@ -128,6 +152,7 @@ public class UserServiceImpl implements UserService {
         return ResponseEntity.ok(new MessageResponse("로그아웃 완료"));
     }
 
+    //토큰 재발급
     @Override
     public TokenResponse reissue(String refreshToken) {
 
@@ -135,11 +160,23 @@ public class UserServiceImpl implements UserService {
             throw new AuthenticationFailedException("refreshToken이 없습니다.");
         }
 
-        Claims claims = jwtTokenizer.parseRefreshToken(refreshToken); // 만료면 예외
+        Claims claims = jwtTokenizer.parseRefreshToken(refreshToken);
+
         Long userId = claims.get("userId", Long.class);
+        if (userId == null) {
+            throw new AuthenticationFailedException("refreshToken payload에 userId가 없습니다.");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationFailedException("유효하지 않은 refreshToken 입니다."));
+
+        if (Boolean.FALSE.equals(user.getIsActive())) {
+            throw new AuthenticationFailedException("탈퇴한 사용자입니다.");
+        }
 
         RefreshToken saved = refreshTokenRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AuthenticationFailedException("유효하지 않은 refreshToken 입니다."));
+
 
         // 저장된 DB 토큰 값과 유저 토큰 일치 확인
         if (!saved.getToken().equals(refreshToken)) {
@@ -150,10 +187,6 @@ public class UserServiceImpl implements UserService {
         if (saved.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new AuthenticationFailedException("만료된 refreshToken 입니다.");
         }
-
-        //유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AuthenticationFailedException("유저를 찾을 수 없습니다."));
 
         //새 accessToken 발급
         String newAccessToken = jwtTokenizer.createAccessToken(

@@ -67,4 +67,16 @@ public class MyPageController {
 
         return ResponseEntity.ok(new MessageResponse("회원탈퇴가 완료되었습니다."));
     }
+
+    // 내 게시물 조회
+
+
+
+
+
+    // 내 댓글 조회
+
+
+
+
 }

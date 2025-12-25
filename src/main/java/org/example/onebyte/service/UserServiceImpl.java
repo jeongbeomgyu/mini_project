@@ -60,8 +60,6 @@ public class UserServiceImpl implements UserService {
         return new MessageResponse("회원가입 완료");
     }
 
-
-
     // 로그인
     @Override
     public TokenResponse login(LoginRequest request, HttpServletResponse response) {
@@ -165,9 +163,6 @@ public class UserServiceImpl implements UserService {
                 user.getNickname(),
                 user.getRole()
         );
-
         return new TokenResponse(newAccessToken);
     }
-
-
 }

@@ -30,7 +30,6 @@ public class UserController {
         return ResponseEntity.ok(tokenResponse);
     }
 
-
     // 로그아웃
     @PostMapping("/logout")
     public ResponseEntity<MessageResponse> logoutUser(@CookieValue(name="refreshToken", required = false)  String refreshToken, HttpServletResponse response) {
@@ -45,6 +44,4 @@ public class UserController {
         TokenResponse tokenResponse = userService.reissue(refreshToken);
         return ResponseEntity.ok(tokenResponse);
     }
-
-
 }

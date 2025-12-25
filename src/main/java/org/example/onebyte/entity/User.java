@@ -59,16 +59,9 @@ public class User {
     }
 
     //도메인 메서드
-    public void changeName(String name) {
+    public void changeInfo(String name, String nickname) {
         this.name = name;
-    }
-
-    public void changeNickname(String nickname) {
         this.nickname = nickname;
-    }
-
-    public void changeEmail(String email) {
-        this.email = email;
     }
 
     public void changePasswordHash(String passwordHash) {

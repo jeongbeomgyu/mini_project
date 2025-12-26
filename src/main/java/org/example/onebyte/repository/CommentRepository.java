@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     //리턴 타입 : 성능 최적화, UX때문
-    Page<Comment> findByBoardIdOrderByCreatedAtDesc(Long boardId, Pageable pageable);
+    Page<Comment> findByBoard_Id(Long boardId, Pageable pageable);
 }

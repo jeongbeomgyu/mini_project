@@ -3,6 +3,7 @@ package org.example.onebyte.config;
 import lombok.RequiredArgsConstructor;
 import org.example.onebyte.security.*;
 import org.springframework.context.annotation.*;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.*;
@@ -40,6 +41,15 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/users/reissue"
                         ).permitAll()
+
+                        // 게시물, 댓글 인증없이 조회 가능
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/boards/**",
+                                "/api/comments/**"
+                        ).permitAll()
+                        
+                        //나머지는 로그인 필요
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -1,6 +1,6 @@
 package org.example.onebyte.service;
 
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.example.onebyte.dto.MessageResponse;
 import org.example.onebyte.dto.comment.CommentRequest;
@@ -14,6 +14,7 @@ import org.example.onebyte.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -24,6 +25,14 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final BoardRepository boardRepository;
+
+    //댓글 조회 - 페이징
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CommentResponse> listByBoard(Long boardId, Pageable pageable) {
+        Page<Comment> page = commentRepository.findByBoard_Id(boardId, pageable);
+        return page.map(CommentResponse::from);
+    }
 
     //댓글 생성
     @Override
@@ -39,12 +48,6 @@ public class CommentServiceImpl implements CommentService {
         Comment saved = commentRepository.save(comment);
 
         return CommentResponse.from(saved);
-    }
-
-    //댓글 조회 - 페이징
-    @Override
-    public Page<CommentResponse> listByBoard(Long boardId, Pageable pageable){
-        return null;
     }
 
     //댓글 수정

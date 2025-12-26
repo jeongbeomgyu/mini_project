@@ -2,6 +2,7 @@ package org.example.onebyte.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.onebyte.dto.MessageResponse;
 import org.example.onebyte.dto.comment.CommentRequest;
 import org.example.onebyte.dto.comment.CommentResponse;
 import org.example.onebyte.security.JwtTokenizer; // 너 프로젝트 경로 맞춰
@@ -47,6 +48,17 @@ public class CommentController {
         return ResponseEntity.ok(commentResponse);
     }
 
+    //댓글 삭제
+    //작성자와 관리자만 가능
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<MessageResponse> deleteComment(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable Long commentId
+    ) {
+        Long userId = jwtTokenizer.getUserIdFromToken(authorization);
+        commentService.delete(commentId, userId);
+        return ResponseEntity.noContent().build(); // 204
+    }
 
 
 }

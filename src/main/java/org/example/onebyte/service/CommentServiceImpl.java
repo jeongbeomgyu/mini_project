@@ -11,6 +11,7 @@ import org.example.onebyte.entity.User;
 import org.example.onebyte.repository.BoardRepository;
 import org.example.onebyte.repository.CommentRepository;
 import org.example.onebyte.repository.UserRepository;
+import org.example.onebyte.type.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -67,8 +68,20 @@ public class CommentServiceImpl implements CommentService {
 
     //댓글 삭제
     @Override
-    public MessageResponse delete(Long commentId, Long userId){
-        return null;
+    public void delete(Long commentId, Long userId){
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글이 존재하지 않습니다."));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
+
+        boolean isAuthor = comment.getUser().getId().equals(userId);
+        boolean isAdmin = user.getRole() == Role.ROLE_ADMIN; // 너 프로젝트 Role 이름 맞춰
+
+        if (!isAuthor && !isAdmin) {
+            throw new AccessDeniedException("작성자 또는 관리자만 삭제할 수 있습니다.");
+        }
+        commentRepository.delete(comment);
     }
 
     //댓글 ID로 한건 조회 : 보류

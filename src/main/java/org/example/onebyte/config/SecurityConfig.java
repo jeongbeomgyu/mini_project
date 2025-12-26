@@ -43,11 +43,15 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // 게시물, 댓글 인증없이 조회 가능
+                        // 테스트위해 boards 임시 permitAll
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/boards/**",
-                                "/api/comments/**"
+                                "/api/boards/**"
                         ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/boards/*/comments/**",
+                                "/api/comments/**").permitAll()
                         
                         //나머지는 로그인 필요
                         .anyRequest().authenticated()

@@ -21,5 +21,5 @@ public interface CommentService {
     CommentResponse update(Long commentId, Long userId, CommentRequest request);
 
     //댓글 삭제
-    MessageResponse delete(Long commentId, Long userId);
+    void delete(Long commentId, Long userId);
 }

@@ -3,9 +3,8 @@ package org.example.onebyte.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.onebyte.dto.MessageResponse;
-import org.example.onebyte.dto.comment.CommentCreateRequest;
+import org.example.onebyte.dto.comment.CommentRequest;
 import org.example.onebyte.dto.comment.CommentResponse;
-import org.example.onebyte.dto.comment.CommentUpdateRequest;
 import org.example.onebyte.entity.Board;
 import org.example.onebyte.entity.Comment;
 import org.example.onebyte.entity.User;
@@ -14,6 +13,7 @@ import org.example.onebyte.repository.CommentRepository;
 import org.example.onebyte.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,7 +27,7 @@ public class CommentServiceImpl implements CommentService {
 
     //댓글 생성
     @Override
-    public CommentResponse create(Long boardId, Long userId, CommentCreateRequest request) {
+    public CommentResponse create(Long boardId, Long userId, CommentRequest request) {
 
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다. id=" + boardId));
@@ -49,15 +49,17 @@ public class CommentServiceImpl implements CommentService {
 
     //댓글 수정
     @Override
-    public CommentResponse update(Long commentId, Long userId, CommentUpdateRequest request){
+    public CommentResponse update(Long commentId, Long userId, CommentRequest request){
         Comment comment = commentRepository.findById(commentId).orElseThrow(()->new IllegalArgumentException("댓글이 존재하지않습니다."));
 
         // 작성자 검증
         if(!comment.getUser().getId().equals(userId)){
-            throw new SecurityException("작성자만 수정할 수 있습니다.");
+            throw new AccessDeniedException("작성자만 수정할 수 있습니다.");
         }
 
-        return null;
+        comment.updateContent(request.content());
+
+        return CommentResponse.from(comment);
     }
 
     //댓글 삭제

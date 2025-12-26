@@ -50,6 +50,9 @@ dependencies {
     //의존성 충돌
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+    //LocalDateTime -> JSON문자열 변환 추가
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 }
 
 tasks.named('test') {

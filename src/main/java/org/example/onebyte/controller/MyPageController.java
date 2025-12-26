@@ -6,18 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.example.onebyte.dto.mypage.MyPageInfoResponse;
 import org.example.onebyte.dto.mypage.UpdateInfoRequest;
 import org.example.onebyte.dto.mypage.UpdatePasswordRequest;
-import org.example.onebyte.dto.user.MessageResponse;
-import org.example.onebyte.entity.User;
-import org.example.onebyte.exception.AuthenticationFailedException;
-import org.example.onebyte.exception.DuplicateResourceException;
-import org.example.onebyte.repository.UserRepository;
+import org.example.onebyte.dto.MessageResponse;
 import org.example.onebyte.security.JwtTokenizer;
 import org.example.onebyte.service.MyPageService;
 import org.example.onebyte.util.CookieUtil;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 

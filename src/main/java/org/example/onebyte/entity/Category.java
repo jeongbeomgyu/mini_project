@@ -49,6 +49,10 @@ public class Category {
         this.name = name;
     }
 
+    public void changeCode(String code) {
+        this.code = code;
+    }
+
     public void activate() {
         this.isActive = true;
     }

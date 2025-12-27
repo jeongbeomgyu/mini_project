@@ -37,12 +37,17 @@ public class CategoryServiceImpl implements CategoryService{
         // 코드 중복 확인 로직
         Optional<Category> byCode = categoryRepository.findByCode(dto.getCode());
         if (byCode.isPresent()) {
-            Category existingCategory = byCode.get();
+            Category existingByCode = byCode.get();
             // 만약 코드 중 비활성화된 상태가 존재한다면 복원
-            if (!existingCategory.isActive()) {
-                existingCategory.activate();
-                existingCategory.rename(dto.getName());
-                return CategoryResponse.from(existingCategory);
+            if (!existingByCode.isActive()) {
+
+                // 이미 다른 카테고리에서 이름을 사용하고 있을 경우
+                if (!existingByCode.getName().equals(dto.getName()) && categoryRepository.findByName(dto.getName()).isPresent()) {
+                    throw new IllegalArgumentException("이미 해당 이름을 사용하는 다른 카테고리가 존재합니다.");
+                }
+                existingByCode.activate();
+                existingByCode.rename(dto.getName());
+                return CategoryResponse.from(existingByCode);
             } else {
                 throw new IllegalArgumentException("이미 사용 중인 카테고리 코드입니다.");
             }
@@ -51,12 +56,18 @@ public class CategoryServiceImpl implements CategoryService{
         // 이름 중복 확인 로직
         Optional<Category> byName = categoryRepository.findByName(dto.getName());
         if (byName.isPresent()) {
-            Category existingCategory = byName.get();
+            Category existingByName = byName.get();
+
+            // 다른 카테고리에서 코드를 사용하고 있을 경우
+            if (existingByName.getCode().equals(dto.getCode()) && categoryRepository.findByCode(dto.getCode()).isPresent()) {
+                throw new IllegalArgumentException("이미 해당 코드를 사용하는 다른 카테고리가 존재합니다.");
+            }
+
             // 만약 이름 중 비활성화된 상태인 카테고리가 존재한다면 복원
-            if (!existingCategory.isActive()) {
-                existingCategory.activate();
-                existingCategory.changeCode(dto.getCode());
-                return CategoryResponse.from(existingCategory);
+            if (!existingByName.isActive()) {
+                existingByName.activate();
+                existingByName.changeCode(dto.getCode());
+                return CategoryResponse.from(existingByName);
             } else {
                 throw new IllegalArgumentException("이미 사용 중인 카테고리 이름입니다.");
             }

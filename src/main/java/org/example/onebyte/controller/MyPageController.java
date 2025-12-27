@@ -3,15 +3,21 @@ package org.example.onebyte.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.onebyte.dto.comment.CommentResponse;
 import org.example.onebyte.dto.mypage.MyPageInfoResponse;
 import org.example.onebyte.dto.mypage.UpdateInfoRequest;
 import org.example.onebyte.dto.mypage.UpdatePasswordRequest;
 import org.example.onebyte.dto.MessageResponse;
 import org.example.onebyte.security.JwtTokenizer;
+import org.example.onebyte.service.CommentService;
 import org.example.onebyte.service.MyPageService;
 import org.example.onebyte.util.CookieUtil;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RequiredArgsConstructor
@@ -20,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class MyPageController {
 
     private final MyPageService myPageService;
+    private final CommentService commentService;
     private final JwtTokenizer jwtTokenizer;
     private final CookieUtil cookieUtil;
 
@@ -68,8 +75,16 @@ public class MyPageController {
 
 
     // 내 댓글 조회
+    @GetMapping("/mypage/comments")
+    public ResponseEntity<List<CommentResponse>> myComments(
+            @RequestHeader("Authorization") String authorization,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Long userId = jwtTokenizer.getUserIdFromToken(authorization);
 
-
-
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(commentService.listMyComments(userId, pageable));
+    }
 
 }

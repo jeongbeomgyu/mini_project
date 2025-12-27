@@ -1,4 +1,9 @@
 package org.example.onebyte.dto.board;
 
-public class BoardRequest {
+import jakarta.validation.constraints.NotBlank;
+
+public record BoardRequest(
+        @NotBlank String title,
+        @NotBlank String content
+) {
 }

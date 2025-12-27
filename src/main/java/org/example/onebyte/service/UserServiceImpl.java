@@ -2,6 +2,7 @@ package org.example.onebyte.service;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.onebyte.dto.MessageResponse;
 import org.example.onebyte.dto.user.*;
 import org.example.onebyte.entity.RefreshToken;
 import org.example.onebyte.entity.User;
@@ -11,7 +12,6 @@ import org.example.onebyte.repository.RefreshTokenRepository;
 import org.example.onebyte.repository.UserRepository;
 import org.example.onebyte.security.JwtTokenizer;
 import org.example.onebyte.util.CookieUtil;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

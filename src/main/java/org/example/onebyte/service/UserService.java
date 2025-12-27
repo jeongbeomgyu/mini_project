@@ -1,6 +1,7 @@
 package org.example.onebyte.service;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.onebyte.dto.MessageResponse;
 import org.example.onebyte.dto.user.*;
 import org.springframework.http.ResponseEntity;
 

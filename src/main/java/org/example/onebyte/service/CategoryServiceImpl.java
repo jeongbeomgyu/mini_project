@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,12 +33,33 @@ public class CategoryServiceImpl implements CategoryService{
     // 관리자 전용 카테고리 생성
     @Override
     public CategoryResponse createCategory(CategoryRequestDto dto) {
-        if (categoryRepository.findByCode(dto.getCode()).isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 카테고리 코드입니다.");
+
+        // 코드 중복 확인 로직
+        Optional<Category> byCode = categoryRepository.findByCode(dto.getCode());
+        if (byCode.isPresent()) {
+            Category existingCategory = byCode.get();
+            // 만약 코드 중 비활성화된 상태가 존재한다면 복원
+            if (!existingCategory.isActive()) {
+                existingCategory.activate();
+                existingCategory.rename(dto.getName());
+                return CategoryResponse.from(existingCategory);
+            } else {
+                throw new IllegalArgumentException("이미 사용 중인 카테고리 코드입니다.");
+            }
         }
 
-        if (categoryRepository.findByName(dto.getName()).isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 카테고리 이름입니다.");
+        // 이름 중복 확인 로직
+        Optional<Category> byName = categoryRepository.findByName(dto.getName());
+        if (byName.isPresent()) {
+            Category existingCategory = byName.get();
+            // 만약 이름 중 비활성화된 상태인 카테고리가 존재한다면 복원
+            if (!existingCategory.isActive()) {
+                existingCategory.activate();
+                existingCategory.changeCode(dto.getCode());
+                return CategoryResponse.from(existingCategory);
+            } else {
+                throw new IllegalArgumentException("이미 사용 중인 카테고리 이름입니다.");
+            }
         }
 
         Category category = Category.builder()
@@ -73,10 +95,10 @@ public class CategoryServiceImpl implements CategoryService{
         }
 
         if (dto.getIsActive() != null) {
-            if (dto.getIsActive()) {
+            if (dto.getIsActive() && !category.isActive()) {
                 category.activate();
-            } else {
-                category.deactivate();
+            } else if (!dto.getIsActive() && category.isActive()){ // 활성 상태일 때만 삭제 로직 실행
+                deleteCategory(id);
             }
         }
         return CategoryResponse.from(category);

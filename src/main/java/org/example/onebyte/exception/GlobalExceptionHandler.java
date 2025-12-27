@@ -143,9 +143,23 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
-// 추후 추가 예정
-//    @ExceptionHandler(AccessDeniedException.class)
-//    public ResponseEntity<ErrorResponse> handleAccess(){}
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(
+            AccessDeniedException e,
+            HttpServletRequest request
+    ){
+        log.warn("Access Denied: {}", e.getMessage());
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.FORBIDDEN.value())
+                .error(HttpStatus.FORBIDDEN.getReasonPhrase())
+                .message(e.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
 //
 //
 //    @ExceptionHandler(GlobalExceptionHandler.class)

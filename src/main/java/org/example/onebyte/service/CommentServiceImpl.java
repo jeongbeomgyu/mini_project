@@ -18,6 +18,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @Transactional
@@ -87,4 +89,10 @@ public class CommentServiceImpl implements CommentService {
     //댓글 ID로 한건 조회 : 보류
     //@Override
     //public CommentResponse getOne(Long commentId);
+
+    // 특정 사용자가 작성한 댓글 조회
+    @Override
+    public List<CommentResponse> listMyComments(Long userId, Pageable pageable) {
+        return commentRepository.findMyComments(userId, pageable);
+    }
 }

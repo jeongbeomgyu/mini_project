@@ -7,8 +7,10 @@ import org.example.onebyte.dto.comment.CommentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface CommentService {
-    //댓글 조회 - 페이징
+    //특정 게시물의 댓글 조회 - 페이징
     Page<CommentResponse> listByBoard(Long boardId, Pageable pageable);
 
     //댓글 생성
@@ -22,4 +24,8 @@ public interface CommentService {
 
     //댓글 삭제
     void delete(Long commentId, Long userId);
+
+    //추가
+    //마이 페이지 관련 : 사용자가 작성한 댓글 조회ㅣ
+    public List<CommentResponse> listMyComments(Long userId, Pageable pageable);
 }

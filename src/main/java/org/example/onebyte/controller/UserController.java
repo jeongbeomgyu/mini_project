@@ -3,6 +3,7 @@ package org.example.onebyte.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.onebyte.dto.MessageResponse;
 import org.example.onebyte.dto.user.*;
 import org.example.onebyte.service.UserService;
 import org.springframework.http.HttpStatus;

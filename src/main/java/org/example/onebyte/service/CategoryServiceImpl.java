@@ -59,7 +59,7 @@ public class CategoryServiceImpl implements CategoryService{
             Category existingByName = byName.get();
 
             // 다른 카테고리에서 코드를 사용하고 있을 경우
-            if (existingByName.getCode().equals(dto.getCode()) && categoryRepository.findByCode(dto.getCode()).isPresent()) {
+            if (!existingByName.getCode().equals(dto.getCode()) && categoryRepository.findByCode(dto.getCode()).isPresent()) {
                 throw new IllegalArgumentException("이미 해당 코드를 사용하는 다른 카테고리가 존재합니다.");
             }
 

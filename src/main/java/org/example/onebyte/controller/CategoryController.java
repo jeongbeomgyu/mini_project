@@ -1,5 +1,6 @@
 package org.example.onebyte.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.onebyte.dto.category.CategoryRequestDto;
 import org.example.onebyte.dto.category.CategoryResponse;
@@ -26,7 +27,7 @@ public class CategoryController {
 
     // 관리자 전용 카테고리 생성
     @PostMapping
-    public ResponseEntity<CategoryResponse> createCategory(@RequestBody CategoryRequestDto request) {
+    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequestDto request) {
 
         CategoryResponse createCategory = categoryService.createCategory(request);
 

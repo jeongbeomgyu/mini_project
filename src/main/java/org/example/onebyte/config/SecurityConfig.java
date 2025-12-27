@@ -52,6 +52,16 @@ public class SecurityConfig {
                                 HttpMethod.GET,
                                 "/api/boards/*/comments/**",
                                 "/api/comments/**").permitAll()
+
+                        // 카테고리 전체 목록 조회는 모든 사용자가 가능하도록 설정
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+
+                        // 카테고리의 생성, 수정, 삭제 부분은 관리자만 접근이 가능
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
+
                         
                         //나머지는 로그인 필요
                         .anyRequest().authenticated()
